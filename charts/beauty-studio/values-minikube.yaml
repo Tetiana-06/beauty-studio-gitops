@@ -7,7 +7,7 @@ backend:
   image:
     # Образ з Docker Hub (логін tetiana88, лише малі літери).
     repository: docker.io/tetiana88/beauty-backend
-    tag: "1.0.0"
+    tag: "2.0.0"
     pullPolicy: IfNotPresent
   config:
     appEnv: "minikube"
