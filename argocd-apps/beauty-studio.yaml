@@ -21,6 +21,6 @@ spec:
   syncPolicy:
     automated:
       prune: true       # видаляти з кластера те, що видалили з Git
-      selfHeal: false   # п. 6a: спершу false, потім змінити на true
+      selfHeal: true   # п. 6a: спершу false, потім змінити на true
     syncOptions:
       - CreateNamespace=true
