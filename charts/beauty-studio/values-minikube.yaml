@@ -1,0 +1,32 @@
+# Значення для локального кластера minikube.
+# Саме цей файл Argo CD накладає поверх values.yaml (див. argocd-apps/beauty-studio.yaml).
+# Щоб випустити нову версію — змініть тут backend.image.tag, зробіть commit і push.
+
+backend:
+  replicaCount: 1
+  image:
+    # Образ з Docker Hub (логін tetiana88, лише малі літери).
+    repository: docker.io/tetiana88/beauty-backend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  config:
+    appEnv: "minikube"
+    logLevel: "debug"
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: docker.io/tetiana88/beauty-frontend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+
+database:
+  auth:
+    username: "user"
+    database: "beauty_db"
+    # Secret створюється вручну командою kubectl create secret (README, крок 3.5).
+    # Пароля в Git немає.
+    existingSecret: "beauty-db-secret"
+
+ingress:
+  enabled: false

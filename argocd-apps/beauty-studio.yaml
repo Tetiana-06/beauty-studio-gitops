@@ -1,0 +1,26 @@
+# Application для Helm-чарту Beauty Studio.
+# Створюється автоматично кореневим Application "root" (bootstrap/root-app.yaml).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: beauty-studio
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Tetiana-06/beauty-studio-gitops.git
+    targetRevision: main
+    path: charts/beauty-studio
+    helm:
+      releaseName: beauty-studio
+      valueFiles:
+        - values-minikube.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: beauty-studio
+  syncPolicy:
+    automated:
+      prune: true       # видаляти з кластера те, що видалили з Git
+      selfHeal: false   # п. 6a: спершу false, потім змінити на true
+    syncOptions:
+      - CreateNamespace=true

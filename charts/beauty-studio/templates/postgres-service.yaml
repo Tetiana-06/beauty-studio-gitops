@@ -1,0 +1,18 @@
+# DVO-L4-3C8B52
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-db
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    app: postgres
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.database.service.type }}
+  selector:
+    {{- include "beauty-studio.database.selectorLabels" . | nindent 4 }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.database.service.port }}
+      targetPort: {{ .Values.database.service.port }}

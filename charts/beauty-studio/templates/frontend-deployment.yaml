@@ -1,0 +1,48 @@
+# DVO-L4-3C8B52
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-frontend
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    app: frontend
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "beauty-studio.frontend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "beauty-studio.labels" . | nindent 8 }}
+        {{- include "beauty-studio.frontend.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- include "beauty-studio.annotations" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.frontend.service.port }}
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.frontend.service.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.frontend.service.port }}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3

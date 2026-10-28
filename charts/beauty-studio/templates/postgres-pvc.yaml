@@ -1,0 +1,18 @@
+# DVO-L4-3C8B52
+{{- if .Values.database.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-postgres-pvc
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    app: postgres
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.database.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.database.persistence.size }}
+{{- end }}

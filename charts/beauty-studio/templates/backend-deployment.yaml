@@ -1,0 +1,56 @@
+# DVO-L4-3C8B52
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-backend
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    app: backend
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  # Якщо новий под не стане готовим за 60 с, Deployment отримує стан "ProgressDeadlineExceeded",
+  # і Argo CD показує застосунок як Degraded (потрібно для п. 6b). За замовчуванням було б 600 с.
+  progressDeadlineSeconds: 60
+  selector:
+    matchLabels:
+      {{- include "beauty-studio.backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "beauty-studio.labels" . | nindent 8 }}
+        {{- include "beauty-studio.backend.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- include "beauty-studio.annotations" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.service.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "beauty-studio.fullname" . }}-config
+            - secretRef:
+                name: {{ include "beauty-studio.secretName" . }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.backend.service.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.backend.service.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3

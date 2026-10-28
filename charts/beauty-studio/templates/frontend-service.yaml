@@ -1,0 +1,21 @@
+# DVO-L4-3C8B52
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-frontend
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    app: frontend
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.frontend.service.type }}
+  selector:
+    {{- include "beauty-studio.frontend.selectorLabels" . | nindent 4 }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.service.port }}
+      {{- if and (eq .Values.frontend.service.type "NodePort") .Values.frontend.service.nodePort }}
+      nodePort: {{ .Values.frontend.service.nodePort }}
+      {{- end }}

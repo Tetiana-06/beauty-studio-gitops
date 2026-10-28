@@ -1,0 +1,59 @@
+# DVO-L4-3C8B52
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-db
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    app: postgres
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "beauty-studio.database.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "beauty-studio.labels" . | nindent 8 }}
+        {{- include "beauty-studio.database.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- include "beauty-studio.annotations" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: postgres
+          image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+          imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.database.service.port }}
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "beauty-studio.secretName" . }}
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "beauty-studio.secretName" . }}
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "beauty-studio.secretName" . }}
+                  key: POSTGRES_DB
+          resources:
+            {{- toYaml .Values.database.resources | nindent 12 }}
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-storage
+          {{- if .Values.database.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "beauty-studio.fullname" . }}-postgres-pvc
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

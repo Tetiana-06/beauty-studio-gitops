@@ -1,0 +1,15 @@
+# DVO-L4-3C8B52
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-config
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    app: backend
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+data:
+  APP_ENV: {{ .Values.backend.config.appEnv | quote }}
+  PORT: {{ .Values.backend.config.port | quote }}
+  LOG_LEVEL: {{ .Values.backend.config.logLevel | quote }}
+  CORS_ALLOW_ALL: {{ .Values.backend.config.corsAllowAll | quote }}

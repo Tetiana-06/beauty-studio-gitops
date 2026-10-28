@@ -1,0 +1,10 @@
+# DVO-L4-3C8B52
+apiVersion: v2
+name: beauty-studio
+description: Helm-чарт для розгортання мікросервісного застосунку Beauty Studio (FastAPI + PostgreSQL + Nginx)
+type: application
+version: 0.2.0
+appVersion: "1.0.0"
+icon: https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.png
+maintainers:
+  - name: Tetiana

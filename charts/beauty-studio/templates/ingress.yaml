@@ -1,0 +1,33 @@
+# DVO-L4-3C8B52
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-ingress
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "beauty-studio.fullname" $ }}-{{ .service }}
+                port:
+                  number: {{ if eq .service "frontend" }}{{ $.Values.frontend.service.port }}{{ else if eq .service "backend" }}{{ $.Values.backend.service.port }}{{ else }}{{ .port }}{{ end }}
+          {{- end }}
+    {{- end }}
+{{- end }}

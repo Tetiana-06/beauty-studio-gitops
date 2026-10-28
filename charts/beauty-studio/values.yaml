@@ -1,0 +1,98 @@
+# DVO-L4-3C8B52
+# Default values for beauty-studio chart.
+# This represents the development environment defaults.
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Backend service configuration
+backend:
+  replicaCount: 1
+  image:
+    repository: beauty-backend
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+      ephemeral-storage: 128Mi
+    limits:
+      cpu: 150m
+      memory: 128Mi
+      ephemeral-storage: 256Mi
+  config:
+    appEnv: "development"
+    port: "8000"
+    logLevel: "debug"
+    corsAllowAll: "true"
+
+# Frontend service configuration
+frontend:
+  replicaCount: 1
+  image:
+    repository: beauty-frontend
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  service:
+    type: NodePort
+    port: 80
+    nodePort: 30080
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+      ephemeral-storage: 128Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# PostgreSQL database configuration
+database:
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    tag: "15-alpine"
+  service:
+    type: ClusterIP
+    port: 5432
+  auth:
+    username: "user"
+    # Пароль НЕ зберігаємо в Git. Для minikube він лежить у Secret beauty-db-secret (див. README).
+    password: ""
+    database: "beauty_db"
+    # Ім'я готового Secret у кластері. Якщо задано — чарт НЕ створює свій Secret
+    # і не використовує password зі значень вище.
+    existingSecret: ""
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+      ephemeral-storage: 128Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+      ephemeral-storage: 256Mi
+
+# Ingress controller configuration
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: "beauty.local"
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: backend

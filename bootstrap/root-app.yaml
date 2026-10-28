@@ -1,0 +1,22 @@
+# Кореневий Application (App of Apps).
+# Це ЄДИНИЙ файл, який застосовується вручну:
+#   kubectl apply -n argocd -f bootstrap/root-app.yaml
+# Він дивиться в папку argocd-apps/ і створює всі Application, що там лежать.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Tetiana-06/beauty-studio-gitops.git
+    targetRevision: main
+    path: argocd-apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
