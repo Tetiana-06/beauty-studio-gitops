@@ -2,10 +2,22 @@
 # Саме цей файл Argo CD накладає поверх values.yaml (див. argocd-apps/beauty-studio.yaml).
 # Щоб випустити нову версію — змініть тут backend.image.tag, зробіть commit і push.
 
+#backend:
+#  replicaCount: 1
+#  image:
+#    # Образ з Docker Hub (логін tetiana88, лише малі літери).
+#    repository: docker.io/tetiana88/beauty-backend
+#    tag: "2.0.0"
+#    pullPolicy: IfNotPresent
+#  config:
+#    appEnv: "minikube"
+#    logLevel: "debug"
+
 backend:
-  replicaCount: 1
+  replicaCount: 4           # ЛР-6: не менше 4, щоб було видно співвідношення версій
+  rollout:
+    enabled: true           # ЛР-6: Rollout замість Deployment
   image:
-    # Образ з Docker Hub (логін tetiana88, лише малі літери).
     repository: docker.io/tetiana88/beauty-backend
     tag: "2.0.0"
     pullPolicy: IfNotPresent
@@ -30,3 +42,4 @@ database:
 
 ingress:
   enabled: false
+

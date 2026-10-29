@@ -1,0 +1,63 @@
+# DVO-L4-3C8B52
+# ЛР-6: Rollout (Argo Rollouts) замість Deployment. Вмикається backend.rollout.enabled.
+{{- if .Values.backend.rollout.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-backend
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    app: backend
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      {{- include "beauty-studio.backend.selectorLabels" . | nindent 6 }}
+  # Кроки релізу беруться з values (backend.rollout.canary.steps).
+  # Сервіс beauty-studio-backend бачить і старі, і нові поди, тому трафік ділиться пропорційно кількості подів.
+  strategy:
+    canary:
+      steps:
+        {{- toYaml .Values.backend.rollout.canary.steps | nindent 8 }}
+  template:
+    metadata:
+      labels:
+        {{- include "beauty-studio.labels" . | nindent 8 }}
+        {{- include "beauty-studio.backend.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- include "beauty-studio.annotations" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.service.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "beauty-studio.fullname" . }}-config
+            - secretRef:
+                name: {{ include "beauty-studio.secretName" . }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.backend.service.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.backend.service.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+{{- end }}

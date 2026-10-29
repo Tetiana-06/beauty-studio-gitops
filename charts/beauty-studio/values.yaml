@@ -30,6 +30,20 @@ backend:
     logLevel: "debug"
     corsAllowAll: "true"
 
+  # ЛР-6: Argo Rollouts замість Deployment.
+  rollout:
+    enabled: false          # true -> створюється Rollout, Deployment не створюється
+    canary:
+      # Без service mesh вага задається кількістю подів: при 4 репліках 25% = 1 под нової версії.
+      steps:
+        - setWeight: 25
+        - pause: { }               # ручна пауза: стоїть, поки не зроблять promote (або abort)
+        - setWeight: 50
+        - pause: { duration: 30s }  # пауза з таймером: через 30 с іде далі сама
+        - setWeight: 75
+        - pause: { duration: 30s }
+        # після останнього кроку автоматично 100%
+
 # Frontend service configuration
 frontend:
   replicaCount: 1

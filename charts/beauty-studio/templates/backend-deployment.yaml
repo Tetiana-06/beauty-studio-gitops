@@ -1,4 +1,6 @@
-# DVO-L4-3C8B52
+
+  {{- if not .Values.backend.rollout.enabled }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -54,3 +56,4 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 3
+{{- end }}
