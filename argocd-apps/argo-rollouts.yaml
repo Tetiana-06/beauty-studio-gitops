@@ -1,0 +1,25 @@
+# Application для контролера Argo Rollouts (ЛР-6, п. 1a).
+# Контролер ставиться з Git так само, як і застосунок: його створює root (App of Apps).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-rollouts
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://argoproj.github.io/argo-helm   # Helm-репозиторій, а не Git
+    chart: argo-rollouts
+    targetRevision: 2.43.8                           # версія чарту з helm search
+    helm:
+      releaseName: argo-rollouts
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-rollouts
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true   # CRD Rollout великий, звичайний apply може не влізти в ліміт анотації
