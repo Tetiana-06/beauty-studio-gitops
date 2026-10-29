@@ -19,7 +19,7 @@ backend:
     enabled: true           # ЛР-6: Rollout замість Deployment
   image:
     repository: docker.io/tetiana88/beauty-backend
-    tag: "2.0.0"
+    tag: "3.0.0"
     pullPolicy: IfNotPresent
   config:
     appEnv: "minikube"
