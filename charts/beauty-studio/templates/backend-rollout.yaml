@@ -1,5 +1,5 @@
 # DVO-L4-3C8B52
-# ЛР-6: Rollout (Argo Rollouts) замість Deployment. Вмикається backend.rollout.enabled.
+# ЛР-6, ЛР-7: Rollout (Argo Rollouts) замість Deployment з підтримкою canary-аналізу
 {{- if .Values.backend.rollout.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
@@ -16,8 +16,6 @@ spec:
   selector:
     matchLabels:
       {{- include "beauty-studio.backend.selectorLabels" . | nindent 6 }}
-  # Кроки релізу беруться з values (backend.rollout.canary.steps).
-  # Сервіс beauty-studio-backend бачить і старі, і нові поди, тому трафік ділиться пропорційно кількості подів.
   strategy:
     canary:
       steps:
@@ -36,7 +34,11 @@ spec:
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.backend.service.port }}
+            - name: http
+              containerPort: {{ .Values.backend.service.port }}
+          env:
+            - name: FAIL_RATE
+              value: {{ .Values.backend.config.failRate | default "0.0" | quote }}
           envFrom:
             - configMapRef:
                 name: {{ include "beauty-studio.fullname" . }}-config

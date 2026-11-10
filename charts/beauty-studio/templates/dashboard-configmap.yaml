@@ -1,0 +1,140 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-dashboard
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+data:
+  beauty-studio-dashboard.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "id": 1,
+          "title": "Requests Per Second (RPS)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(rate(http_requests_total{endpoint!~\"/metrics|/health\"}[1m])) by (endpoint, method)",
+              "legendFormat": "{{`{{method}} {{endpoint}}`}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "5xx Error Rate (%)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "(sum(rate(http_requests_total{status=~\"5..\"}[1m])) or vector(0)) / (sum(rate(http_requests_total[1m])) > 0) * 100 or vector(0)",
+              "legendFormat": "Error Rate %",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 5 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "p95 Latency",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, endpoint))",
+              "legendFormat": "{{`p95 {{endpoint}}`}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Backend Pods CPU Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(rate(container_cpu_usage_seconds_total{container=\"backend\"}[1m])) by (pod)",
+              "legendFormat": "{{`{{pod}}`}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Backend Pods Memory Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(container_memory_working_set_bytes{container=\"backend\"}) by (pod)",
+              "legendFormat": "{{`{{pod}}`}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes"
+            }
+          }
+        },
+        {
+          "id": 6,
+          "title": "Backend Pods Logs (Loki)",
+          "type": "logs",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+          "targets": [
+            {
+              "datasource": { "type": "loki", "uid": "loki" },
+              "expr": "{container=\"backend\"}",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["beauty-studio", "observability"],
+      "time": { "from": "now-15m", "to": "now" },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Beauty Studio Observability",
+      "uid": "beauty-studio-obs",
+      "version": 1
+    }
+{{- end }}

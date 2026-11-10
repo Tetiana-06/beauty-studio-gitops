@@ -29,17 +29,21 @@ backend:
     port: "8000"
     logLevel: "debug"
     corsAllowAll: "true"
+    failRate: "0.0"         # ЛР-7 п. 6b: частка помилок (0.0 = немає)
 
-  # ЛР-6: Argo Rollouts замість Deployment.
+  # ЛР-6, ЛР-7: Argo Rollouts замість Deployment.
   rollout:
     enabled: false          # true -> створюється Rollout, Deployment не створюється
     canary:
       # Без service mesh вага задається кількістю подів: при 4 репліках 25% = 1 под нової версії.
       steps:
         - setWeight: 25
-        - pause: { }               # ручна пауза: стоїть, поки не зроблять promote (або abort)
+        - pause: { duration: 30s }  # ЛР-7: даємо canary-поду 30 с трафіку, щоб помилки встигли потрапити в метрики
+        - analysis:                 # ЛР-7 п. 6a: перевірка частки успішних запитів у Prometheus
+            templates:
+              - templateName: beauty-studio-success-rate
         - setWeight: 50
-        - pause: { duration: 30s }  # пауза з таймером: через 30 с іде далі сама
+        - pause: { duration: 30s }
         - setWeight: 75
         - pause: { duration: 30s }
         # після останнього кроку автоматично 100%
@@ -75,11 +79,8 @@ database:
     port: 5432
   auth:
     username: "user"
-    # Пароль НЕ зберігаємо в Git. Для minikube він лежить у Secret beauty-db-secret (див. README).
     password: ""
     database: "beauty_db"
-    # Ім'я готового Secret у кластері. Якщо задано — чарт НЕ створює свій Secret
-    # і не використовує password зі значень вище.
     existingSecret: ""
   persistence:
     enabled: true
@@ -110,3 +111,23 @@ ingress:
         - path: /api
           pathType: Prefix
           service: backend
+
+# ЛР-7: Observability (ServiceMonitor, дашборд, AnalysisTemplate, PrometheusRule)
+serviceMonitor:
+  enabled: true
+  path: /metrics
+  interval: 10s
+
+dashboard:
+  enabled: true
+
+analysis:
+  enabled: true
+  threshold: 0.95           # поріг: не менше 95% успішних запитів
+  count: 3
+  interval: 10s
+  failureLimit: 0
+  prometheusAddress: "http://kube-prometheus-stack-prometheus.monitoring.svc:9090"
+
+prometheusRule:
+  enabled: true

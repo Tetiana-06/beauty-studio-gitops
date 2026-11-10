@@ -1,6 +1,4 @@
-
-  {{- if not .Values.backend.rollout.enabled }}
-
+{{- if not .Values.backend.rollout.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -12,8 +10,6 @@ metadata:
     {{- include "beauty-studio.annotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.backend.replicaCount }}
-  # Якщо новий под не стане готовим за 60 с, Deployment отримує стан "ProgressDeadlineExceeded",
-  # і Argo CD показує застосунок як Degraded (потрібно для п. 6b). За замовчуванням було б 600 с.
   progressDeadlineSeconds: 60
   selector:
     matchLabels:
@@ -32,7 +28,11 @@ spec:
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.backend.service.port }}
+            - name: http
+              containerPort: {{ .Values.backend.service.port }}
+          env:
+            - name: FAIL_RATE
+              value: {{ .Values.backend.config.failRate | default "0.0" | quote }}
           envFrom:
             - configMapRef:
                 name: {{ include "beauty-studio.fullname" . }}-config
