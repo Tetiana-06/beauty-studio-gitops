@@ -13,7 +13,7 @@ backend:
   config:
     appEnv: "minikube"
     logLevel: "debug"
-    failRate: "0.0"         # ЛР-7 п. 6b: для відкату встановити "0.5"
+    failRate: "0.5"         # ЛР-7 п. 6b: для відкату встановити "0.5"
 
 frontend:
   replicaCount: 1
