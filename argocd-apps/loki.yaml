@@ -26,6 +26,15 @@ spec:
           replicas: 1
           persistence:
             enabled: false
+          # Без persistence чарт не монтує том у /var/loki, а коренева ФС
+          # контейнера read-only -> "mkdir /var/loki: read-only file system".
+          # Даємо Loki тимчасовий записуваний каталог (дані живуть, поки живе под).
+          extraVolumes:
+            - name: data
+              emptyDir: {}
+          extraVolumeMounts:
+            - name: data
+              mountPath: /var/loki
           resources:
             requests:
               cpu: 50m
