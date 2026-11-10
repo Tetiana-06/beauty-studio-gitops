@@ -1,0 +1,24 @@
+# ЛР-7 п. 5, 6c: генератор навантаження ВСЕРЕДИНІ кластера.
+# Запити йдуть через Service, тому розподіляються між УСІМА подами (і stable, і canary).
+# (kubectl port-forward svc/... так не вміє — він під'єднується лише до одного пода.)
+#   Запустити:  kubectl apply -f scripts/load-generator.yaml
+#   Зупинити:   kubectl delete -f scripts/load-generator.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: load-generator
+  namespace: beauty-studio
+spec:
+  restartPolicy: Never
+  containers:
+    - name: load
+      image: curlimages/curl:8.10.1
+      command: ["sh", "-c"]
+      args:
+        - |
+          echo "load started"
+          while true; do
+            curl -s -o /dev/null http://beauty-studio-backend:8000/api/bookings
+            curl -s -o /dev/null http://beauty-studio-backend:8000/version
+            sleep 0.05
+          done
