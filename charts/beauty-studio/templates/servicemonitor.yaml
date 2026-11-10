@@ -12,6 +12,7 @@ spec:
       app: backend               # мітка Service бекенду (backend-service.yaml)
   endpoints:
     - port: http                 # ім'я порту в Service
+      honorLabels: true          # ЛР-7: зберегти мітку endpoint застосунку (інакше Prometheus перейменує її на exported_endpoint)
       path: {{ .Values.serviceMonitor.path }}
       interval: {{ .Values.serviceMonitor.interval }}
 {{- end }}
