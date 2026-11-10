@@ -60,7 +60,7 @@ spec:
               }
 
               loki.source.kubernetes "pod_logs" {
-                targets    = discovery.relabel.pod_logs.targets
+                targets    = discovery.relabel.pod_logs.output
                 forward_to = [loki.write.default.receiver]
               }
   destination:
