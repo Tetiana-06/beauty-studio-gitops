@@ -1,0 +1,17 @@
+# ЛР-7 п. 2b: ServiceMonitor каже Prometheus: "скрапити /metrics у Service з міткою app=backend".
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-backend
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: backend               # мітка Service бекенду (backend-service.yaml)
+  endpoints:
+    - port: http                 # ім'я порту в Service
+      path: {{ .Values.serviceMonitor.path }}
+      interval: {{ .Values.serviceMonitor.interval }}
+{{- end }}

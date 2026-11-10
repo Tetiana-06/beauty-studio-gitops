@@ -2,28 +2,18 @@
 # Саме цей файл Argo CD накладає поверх values.yaml (див. argocd-apps/beauty-studio.yaml).
 # Щоб випустити нову версію — змініть тут backend.image.tag, зробіть commit і push.
 
-#backend:
-#  replicaCount: 1
-#  image:
-#    # Образ з Docker Hub (логін tetiana88, лише малі літери).
-#    repository: docker.io/tetiana88/beauty-backend
-#    tag: "2.0.0"
-#    pullPolicy: IfNotPresent
-#  config:
-#    appEnv: "minikube"
-#    logLevel: "debug"
-
 backend:
   replicaCount: 4           # ЛР-6: не менше 4, щоб було видно співвідношення версій
   rollout:
-    enabled: true           # ЛР-6: Rollout замість Deployment
+    enabled: true           # ЛР-6, ЛР-7: Rollout замість Deployment
   image:
     repository: docker.io/tetiana88/beauty-backend
-    tag: "3.0.0"
+    tag: "7.0.0"            # ЛР-7: образ з /metrics і JSON-логами
     pullPolicy: IfNotPresent
   config:
     appEnv: "minikube"
     logLevel: "debug"
+    failRate: "0.0"         # ЛР-7 п. 6b: для відкату встановити "0.5"
 
 frontend:
   replicaCount: 1
@@ -36,10 +26,7 @@ database:
   auth:
     username: "user"
     database: "beauty_db"
-    # Secret створюється вручну командою kubectl create secret (README, крок 3.5).
-    # Пароля в Git немає.
     existingSecret: "beauty-db-secret"
 
 ingress:
   enabled: false
-

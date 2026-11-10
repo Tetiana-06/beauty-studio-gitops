@@ -1,0 +1,26 @@
+# ЛР-7 п. 6a: AnalysisTemplate — Argo Rollouts питає Prometheus про частку успішних запитів.
+# Частка успішних = запити без 5xx / усі запити (без службових /metrics і /health).
+# Якщо частка < 95% (threshold) — вимір Failed, AnalysisRun Failed, Rollout робить abort.
+{{- if .Values.analysis.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-success-rate
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+spec:
+  metrics:
+    - name: success-rate
+      interval: {{ .Values.analysis.interval }}          # як часто питати Prometheus
+      count: {{ .Values.analysis.count }}                # скільки разів спитати
+      failureLimit: {{ .Values.analysis.failureLimit }}  # 0 = перший же поганий вимір валить аналіз
+      # isNaN: якщо трафіку немає (0/0), не вважаємо це помилкою
+      successCondition: isNaN(result[0]) || result[0] >= {{ .Values.analysis.threshold }}
+      provider:
+        prometheus:
+          address: {{ .Values.analysis.prometheusAddress }}
+          query: |
+            sum(rate(http_requests_total{status!~"5..", endpoint!~"/metrics|/health"}[1m]))
+            /
+            sum(rate(http_requests_total{endpoint!~"/metrics|/health"}[1m]))
+{{- end }}

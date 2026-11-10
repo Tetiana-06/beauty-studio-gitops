@@ -1,0 +1,28 @@
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "beauty-studio.fullname" . }}-alerts
+  labels:
+    {{- include "beauty-studio.labels" . | nindent 4 }}
+    role: alert-rules
+  annotations:
+    {{- include "beauty-studio.annotations" . | nindent 4 }}
+spec:
+  groups:
+    - name: beauty-studio-alerts
+      rules:
+        - alert: HighErrorRate5xx
+          expr: |
+            (
+              sum(rate(http_requests_total{status=~"5.."}[1m]))
+              /
+              sum(rate(http_requests_total[1m]))
+            ) * 100 > 5
+          for: 15s
+          labels:
+            severity: critical
+          annotations:
+            summary: "High HTTP 5xx error rate detected"
+            description: "5xx error rate is above 5% on Beauty Studio backend."
+{{- end }}
